@@ -1,6 +1,6 @@
 #creating eval datasets
 
-{
+test_cases = {
   "project_name": "SAGE Prompt Evaluation Suite",
   "description": "Evaluation dataset for Sage, a research copilot designed to assist students and researchers with academic research.",
   "version": "1.0",
