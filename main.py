@@ -11,8 +11,12 @@ load_dotenv()
 #initiating the groq client
 client = Groq(api_key = os.getenv("GROQ_API_KEY"))
 
-#declaring message
-messages = [{"role":"user","content":"hello"}]
+#Declaring empty list for memory
+messages = []
+
+#inserting the system prompt to the chatbot
+message = [{"role":"system","content":SAGE_SYSTEM_PROMPT}]
+messages.insert(0,message)
 
 #sending request to the api
 request = client.chat.completions.create(
@@ -22,5 +26,24 @@ request = client.chat.completions.create(
     messages = messages 
 )
 
-#printing result
-print(request.choices[0].message.content)
+
+
+
+#creating add message function
+def add_message(text):
+    messages.append(text)
+
+def chat():
+    print("Hello. It's nice to meet you. Is there something I can help you with or would you like to chat?")
+    
+#initiating chatbot loop
+while True:
+    print("============================")
+    user_input = input("---> You")
+    print("============================")
+    #printing result
+    print(request.choices[0].message.content)
+
+    #parsing user input into the add message function
+    add_message(user_input)
+
