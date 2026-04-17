@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sage — AI Research Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --white: #ffffff;
+  --off: #f7f9fc;
+  --off2: #eef2f8;
+  --blue: #2563eb;
+  --blue-light: #3b82f6;
+  --blue-pale: #dbeafe;
+  --blue-pale2: #eff6ff;
+  --blue-dark: #1d4ed8;
+  --ink: #0f172a;
+  --ink2: #334155;
+  --ink3: #64748b;
+  --ink4: #94a3b8;
+  --border: #e2e8f0;
+  --border2: #cbd5e1;
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+  --shadow: 0 4px 16px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.04);
+  --shadow-lg: 0 20px 48px rgba(37,99,235,0.12), 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-blue: 0 8px 32px rgba(37,99,235,0.2);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* CUSTOM CURSOR */
+.cursor {
+  width: 10px; height: 10px;
+  background: var(--blue);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: multiply;
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1.5px solid var(--blue-light);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%,-50%);
+  opacity: 0.5;
+  transition: width 0.25s, height 0.25s, border-color 0.2s;
+}
+body:has(*:hover) .cursor { }
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 200;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 1rem;
+  font-style: italic;
+  font-weight: 700;
+  font-family:'lora', serif;
+  color: blue;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.logo:hover { opacity: 0.75; }
+
+.logo-mark {
+  width: 28px; height: 28px;
+  background: var(--blue);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  font-size: 13px;
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-weight: 400;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.logo:hover .logo-mark {
+  transform: rotate(-5deg) scale(1.05);
+  box-shadow: var(--shadow-blue);
+}
+
+.nav-links {
+  display: flex; gap: 32px; list-style: none;
+}
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink3);
+  text-decoration: none;
+  transition: color 0.2s;
+  position: relative;
+  padding-bottom: 2px;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--blue);
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+.nav-links a:hover { color: var(--blue); }
+.nav-links a:hover::after { transform: scaleX(1); }
+
+.nav-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--blue-pale2);
+  border: 1px solid var(--blue-pale);
+  color: var(--blue);
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 100px;
+  letter-spacing: 0.03em;
+  transition: background 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.nav-badge:hover {
+  background: var(--blue-pale);
+  box-shadow: var(--shadow-blue);
+}
+
+.pulse {
+  width: 6px; height: 6px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: pulse 2s ease infinite;
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(37,99,235,0); }
+}
+
+/* HERO */
+.hero {
+  padding: 140px 48px 0;
+  max-width: 1140px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+}
+
+/* bg mesh */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 60px; left: 50%;
+  transform: translateX(-50%);
+  width: 900px; height: 500px;
+  background: radial-gradient(ellipse at 30% 40%, rgba(37,99,235,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 60%, rgba(59,130,246,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero > * { position: relative; z-index: 1; }
+
+.hero-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--blue-pale2);
+  border: 1px solid var(--blue-pale);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 100px;
+  margin-bottom: 36px;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.1s forwards;
+  cursor: default;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.hero-chip:hover {
+  box-shadow: var(--shadow-blue);
+  transform: translateY(-1px);
+}
+
+h1 {
+  font-size: clamp(2.8rem, 5.5vw, 4.6rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.25s forwards;
+}
+h1 em {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--blue);
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--ink3);
+  max-width: 540px;
+  margin: 0 auto 44px;
+  line-height: 1.75;
+  font-weight: 400;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.4s forwards;
+}
+
+.hero-cta {
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.55s forwards;
+  margin-bottom: 80px;
+}
+
+.btn-coming {
+  display: inline-flex; align-items: center; gap: 9px;
+  background: var(--blue);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 13px 28px;
+  border-radius: 10px;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-blue);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
+  border: none;
+}
+.btn-coming:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(37,99,235,0.3);
+  background: var(--blue-dark);
+}
+.btn-coming:active { transform: translateY(0); }
+
+/* STATS */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: 0 auto 0;
+  max-width: 860px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.7s forwards;
+}
+
+.stat {
+  flex: 1;
+  padding: 28px 20px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s, transform 0.2s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.stat:last-child { border-right: none; }
+.stat::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--blue-pale2);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.stat:hover::after { opacity: 1; }
+.stat:hover { transform: translateY(-2px); }
+
+.stat-val {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 4px;
+  position: relative; z-index: 1;
+}
+.stat-val .blue { color: var(--blue); }
+.stat-lbl {
+  font-size: 0.72rem;
+  color: var(--ink4);
+  font-weight: 500;
+  position: relative; z-index: 1;
+}
+
+/* MARQUEE */
+.marquee-wrap {
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 15px 0;
+  background: var(--off);
+  margin-top: 80px;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 26s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+.m-item {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--ink4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 28px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.m-item:hover { color: var(--blue); }
+.m-item.b { color: var(--blue-light); }
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* SECTION SHARED */
+.section {
+  padding: 96px 48px;
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.section-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: clamp(1.9rem, 3.2vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.section-title em {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--blue);
+}
+.section-desc {
+  font-size: 0.92rem;
+  color: var(--ink3);
+  max-width: 480px;
+  line-height: 1.75;
+  margin-bottom: 52px;
+}
+
+/* DASHBOARD */
+.mockup-wrap {
+  background: var(--off);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 48px;
+}
+.mockup-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.mock-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 32px;
+}
+
+.dashboard {
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--white);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.dash-bar {
+  background: var(--off);
+  border-bottom: 1px solid var(--border);
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.db { width: 10px; height: 10px; border-radius: 50%; cursor: pointer; transition: transform 0.15s; }
+.db:hover { transform: scale(1.3); }
+.db.r { background: #ff5f57; }
+.db.y { background: #febc2e; }
+.db.g { background: #28c840; }
+.dash-url {
+  margin-left: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 3px 12px;
+  font-size: 0.7rem;
+  color: var(--ink4);
+  max-width: 260px;
+}
+
+.dash-body {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  min-height: 380px;
+}
+.dash-side {
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  background: var(--off2);
+}
+.side-item {
+  padding: 8px 18px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ink4);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  border-left: 2px solid transparent;
+}
+.side-item:hover {
+  color: var(--blue);
+  background: rgba(37,99,235,0.04);
+}
+.side-item.active {
+  color: var(--blue);
+  background: rgba(37,99,235,0.06);
+  border-left-color: var(--blue);
+  font-weight: 600;
+}
+
+.dash-main { padding: 22px; }
+.dash-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.dash-top-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.blue-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: var(--blue-pale2);
+  border: 1px solid var(--blue-pale);
+  color: var(--blue);
+  padding: 3px 9px;
+  border-radius: 100px;
+}
+
+.q-box {
+  background: var(--off2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 13px 15px;
+  font-size: 0.8rem;
+  color: var(--ink2);
+  line-height: 1.55;
+  margin-bottom: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: text;
+}
+.q-box:hover {
+  border-color: var(--blue-light);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.07);
+}
+.q-box strong { color: var(--ink); font-weight: 600; }
+
+.chips {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.chip {
+  font-size: 0.67rem;
+  font-weight: 500;
+  background: var(--off);
+  border: 1px solid var(--border);
+  color: var(--ink3);
+  padding: 3px 9px;
+  border-radius: 5px;
+  transition: all 0.18s;
+  cursor: pointer;
+}
+.chip:hover {
+  background: var(--blue-pale2);
+  border-color: var(--blue-pale);
+  color: var(--blue);
+  transform: translateY(-1px);
+}
+.chip.b {
+  background: var(--blue-pale2);
+  border-color: var(--blue-pale);
+  color: var(--blue);
+}
+
+.results { display: flex; flex-direction: column; gap: 7px; }
+.result-row {
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 11px 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  transform-origin: left center;
+}
+.result-row:hover {
+  border-color: var(--blue-light);
+  background: var(--blue-pale2);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+.result-text { font-size: 0.76rem; color: var(--ink3); line-height: 1.5; }
+.result-text strong { color: var(--ink); font-weight: 600; }
+
+.badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.result-row:hover .badge { transform: scale(1.05); }
+.b-v { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+.b-c { background: #fef9c3; color: #ca8a04; border: 1px solid #fef08a; }
+.b-g { background: #dbeafe; color: var(--blue); border: 1px solid #bfdbfe; }
+
+/* FEATURES */
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.feat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+}
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-light));
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+.feat-card:hover {
+  border-color: var(--blue-light);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-6px) rotateX(1deg);
+}
+.feat-card:hover::before { transform: scaleX(1); }
+
+.feat-card.clicked {
+  animation: cardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes cardPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.97) translateY(-2px); }
+  100% { transform: scale(1) translateY(-6px); }
+}
+
+.feat-icon-wrap {
+  width: 38px; height: 38px;
+  background: var(--blue-pale2);
+  border: 1px solid var(--blue-pale);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  margin-bottom: 18px;
+  transition: background 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.feat-card:hover .feat-icon-wrap {
+  background: var(--blue);
+  border-color: var(--blue);
+  transform: rotate(-8deg) scale(1.1);
+}
+
+.feat-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 9px;
+  letter-spacing: -0.01em;
+  transition: color 0.2s;
+}
+.feat-card:hover .feat-title { color: var(--blue); }
+
+.feat-desc {
+  font-size: 0.8rem;
+  color: var(--ink3);
+  line-height: 1.65;
+  transition: color 0.2s;
+}
+.feat-card:hover .feat-desc { color: var(--ink2); }
+
+/* HOW IT WORKS */
+.how-section {
+  background: var(--off);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 96px 48px;
+}
+.how-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 52px;
+}
+
+.step-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 22px;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  opacity: 0;
+  transform: translateY(32px);
+}
+.step-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.step-card:hover {
+  border-color: var(--blue);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-5px) rotate(-0.5deg);
+}
+.step-card:active {
+  transform: scale(0.97) translateY(-2px);
+}
+
+.step-num-wrap {
+  width: 40px; height: 40px;
+  background: var(--blue-pale2);
+  border: 1.5px solid var(--blue-pale);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 18px;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.step-card:hover .step-num-wrap {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: white;
+  transform: scale(1.15) rotate(5deg);
+}
+
+.step-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 9px;
+  letter-spacing: -0.01em;
+}
+.step-desc {
+  font-size: 0.78rem;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* CTA */
+.cta-section {
+  padding: 96px 48px;
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
+}
+.cta-section h2 {
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+.cta-section h2 em {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--blue);
+}
+.cta-section p {
+  font-size: 0.92rem;
+  color: var(--ink3);
+  margin-bottom: 36px;
+  line-height: 1.7;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--off);
+}
+.footer-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.footer-copy { font-size: 0.72rem; color: var(--ink4); }
+.footer-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* RIPPLE */
+.ripple-host { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(37,99,235,0.12);
+  transform: scale(0);
+  animation: ripple-anim 0.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple-anim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero { padding: 110px 20px 0; }
+  .stats-row { flex-wrap: wrap; }
+  .stat { min-width: 50%; }
+  .section, .mockup-wrap { padding: 64px 20px; }
+  .feat-grid { grid-template-columns: 1fr 1fr; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .dash-body { grid-template-columns: 1fr; }
+  .dash-side { display: none; }
+  .how-section { padding: 64px 20px; }
+  footer { flex-direction: column; gap: 14px; padding: 24px 20px; text-align: center; }
+}
+@media (max-width: 560px) {
+  .feat-grid, .steps-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">
+       <em>Sage</em> 
+  </div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+  </ul>
+  <div class="nav-badge">
+    <span class="pulse"></span>
+    Coming Soon
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-chip">
+    <span class="pulse"></span>
+    AI Research Assistant — In Development
+  </div>
+  <h1>Research that thinks<br><em>with you.</em></h1>
+  <p class="hero-sub">Sage reads everything, synthesizes what matters, and delivers answers that you can trust with every source traceable and every claim verified.</p>
+  <div class="hero-cta">
+    <button class="btn-coming ripple-host" onclick="createRipple(event, this)">
+      <span class="pulse"></span>
+      Coming Soon
+    </button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat ripple-host" onclick="createRipple(event, this)">
+      <div class="stat-val"><span class="blue">10x</span></div>
+      <div class="stat-lbl">Faster than manual research</div>
+    </div>
+    <div class="stat ripple-host" onclick="createRipple(event, this)">
+      <div class="stat-val">500<span class="blue">+</span></div>
+      <div class="stat-lbl">Sources per query</div>
+    </div>
+    <div class="stat ripple-host" onclick="createRipple(event, this)">
+      <div class="stat-val"><span class="blue">100%</span></div>
+      <div class="stat-lbl">Citation traceable answers</div>
+    </div>
+    <div class="stat ripple-host" onclick="createRipple(event, this)">
+      <div class="stat-val">0</div>
+      <div class="stat-lbl">Hallucinations tolerated</div>
+    </div>
+  </div>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <div class="m-item b">Deep Synthesis</div>
+    <div class="m-item">Source Verification</div>
+    <div class="m-item b">Citation Mapping</div>
+    <div class="m-item">Contradiction Detection</div>
+    <div class="m-item b">Research Memory</div>
+    <div class="m-item">Multi-Format Ingestion</div>
+    <div class="m-item b">AI Reasoning</div>
+    <div class="m-item">Export-Ready Outputs</div>
+    <div class="m-item b">Gap Analysis</div>
+    <div class="m-item">Real-Time Indexing</div>
+    <div class="m-item b">Deep Synthesis</div>
+    <div class="m-item">Source Verification</div>
+    <div class="m-item b">Citation Mapping</div>
+    <div class="m-item">Contradiction Detection</div>
+    <div class="m-item b">Research Memory</div>
+    <div class="m-item">Multi-Format Ingestion</div>
+    <div class="m-item b">AI Reasoning</div>
+    <div class="m-item">Export-Ready Outputs</div>
+    <div class="m-item b">Gap Analysis</div>
+    <div class="m-item">Real-Time Indexing</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="mockup-wrap">
+  <div class="mockup-inner">
+    <div class="mock-label">Live Preview</div>
+    <div class="dashboard reveal" id="dashCard">
+      <div class="dash-bar">
+        <div class="db r"></div><div class="db y"></div><div class="db g"></div>
+        <div class="dash-url">app.sage.ai / research / active</div>
+      </div>
+      <div class="dash-body">
+        <div class="dash-side">
+          <div class="side-item active">◎ &nbsp;Active Research</div>
+          <div class="side-item">⊹ &nbsp;Knowledge Base</div>
+          <div class="side-item">◈ &nbsp;Citations</div>
+          <div class="side-item">◑ &nbsp;Sources</div>
+          <div class="side-item">◲ &nbsp;Exports</div>
+          <div class="side-item">⟁ &nbsp;History</div>
+        </div>
+        <div class="dash-main">
+          <div class="dash-top">
+            <div class="dash-top-title">Current Query</div>
+            <div class="blue-tag">✓ 47 sources analyzed</div>
+          </div>
+          <div class="q-box">
+            <strong>"What are the measurable effects of algorithmic bias in hiring systems, and what mitigation strategies have shown empirical results?"</strong>
+          </div>
+          <div class="chips">
+            <div class="chip b">12 peer-reviewed papers</div>
+            <div class="chip">8 industry reports</div>
+            <div class="chip">EEOC datasets</div>
+            <div class="chip">27 web sources</div>
+          </div>
+          <div class="results">
+            <div class="result-row ripple-host" onclick="createRipple(event, this)">
+              <div class="result-text"><strong>Amazon's 2018 hiring AI</strong> showed 85% lower selection rates for women in technical roles, it was discontinued after internal audit.</div>
+              <div class="badge b-v">✓ Verified</div>
+            </div>
+            <div class="result-row ripple-host" onclick="createRipple(event, this)">
+              <div class="result-text"><strong>Adversarial debiasing</strong> reduces demographic disparity by 40–60% without significant accuracy loss.</div>
+              <div class="badge b-v">✓ Verified</div>
+            </div>
+            <div class="result-row ripple-host" onclick="createRipple(event, this)">
+              <div class="result-text"><strong>Proxy variable elimination</strong> shows conflicting effectiveness across different organizational contexts.</div>
+              <div class="badge b-c"> Conflict</div>
+            </div>
+            <div class="result-row ripple-host" onclick="createRipple(event, this)">
+              <div class="result-text"><strong>Long-term societal impact</strong> of automated hiring bias includes insufficient longitudinal data currently exists.</div>
+              <div class="badge b-g">◎ Gap</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="reveal">
+    <div class="section-eyebrow">Capabilities</div>
+    <div class="section-title">Everything you need.<br><em>Nothing you don't.</em></div>
+    <p class="section-desc">Built for researchers, analysts, and builders who need answers they can actually stand behind.</p>
+  </div>
+
+  <div class="feat-grid">
+    <div class="feat-card reveal ripple-host" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">◎</div>
+      <div class="feat-title">Deep Source Synthesis</div>
+      <p class="feat-desc">Reads hundreds of sources simultaneously and distills exactly what's relevant and not just what's popular or most linked.</p>
+    </div>
+    <div class="feat-card reveal ripple-host" style="transition-delay:0.08s" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">⟁</div>
+      <div class="feat-title">Contradiction Detection</div>
+      <p class="feat-desc">Surfaces disagreements between sources automatically. See where consensus holds and where the debate is still open.</p>
+    </div>
+    <div class="feat-card reveal ripple-host" style="transition-delay:0.16s" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">◈</div>
+      <div class="feat-title">Traceable Citations</div>
+      <p class="feat-desc">Every claim links directly to its source. Verify anything, drill into anything with no black box and no mystery outputs.</p>
+    </div>
+    <div class="feat-card reveal ripple-host" style="transition-delay:0.24s" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">⊹</div>
+      <div class="feat-title">Research Memory</div>
+      <p class="feat-desc">Builds a persistent knowledge graph across all your projects by connecting dots across sessions you didn't know were related.</p>
+    </div>
+    <div class="feat-card reveal ripple-host" style="transition-delay:0.32s" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">◑</div>
+      <div class="feat-title">Multi-Format Ingestion</div>
+      <p class="feat-desc">PDFs, papers, URLs, raw notes, Sage reads everything and normalizes it into structured, queryable knowledge instantly.</p>
+    </div>
+    <div class="feat-card reveal ripple-host" style="transition-delay:0.4s" onclick="createRipple(event, this); this.classList.add('clicked'); setTimeout(()=>this.classList.remove('clicked'),400)">
+      <div class="feat-icon-wrap">◲</div>
+      <div class="feat-title">Export-Ready Outputs</div>
+      <p class="feat-desc">Summaries, bibliographies, structured briefs, formatted for wherever your work goes next, with one click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<div class="how-section" id="how">
+  <div class="how-inner">
+    <div class="reveal">
+      <div class="section-eyebrow">How it works</div>
+      <div class="section-title">From question to clarity<br><em>in four steps.</em></div>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card ripple-host" onclick="createRipple(event, this)">
+        <div class="step-num-wrap">01</div>
+        <div class="step-title">Ask anything</div>
+        <p class="step-desc">Start with a question, a topic or a half-formed thought. Sage understands intent and not just keywords.</p>
+      </div>
+      <div class="step-card ripple-host" onclick="createRipple(event, this)">
+        <div class="step-num-wrap">02</div>
+        <div class="step-title">Sage searches deep</div>
+        <p class="step-desc">Across the web, your uploads, academic databases, and research history simultaneously.</p>
+      </div>
+      <div class="step-card ripple-host" onclick="createRipple(event, this)">
+        <div class="step-num-wrap">03</div>
+        <div class="step-title">Synthesis happens</div>
+        <p class="step-desc">Sources weighted, Contradictions flagged, Consensus identified, Gaps noted, All automatically.</p>
+      </div>
+      <div class="step-card ripple-host" onclick="createRipple(event, this)">
+        <div class="step-num-wrap">04</div>
+        <div class="step-title">You get clarity</div>
+        <p class="step-desc">A structured, cited, honest answer with every source traceable and every claim verifiable, Zero hallucinations.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section reveal">
+  <h2>Research without<br><em>compromise.</em></h2>
+  <p>Sage is coming. Built for people who can't afford to be wrong.</p>
+  <button class="btn-coming ripple-host" onclick="createRipple(event, this)">
+    <span class="pulse"></span>
+    Coming Soon
+  </button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo" style = "font-family: 'lora', serif; color:blue; font-style: italic;">
+    <em>Sage</em>
+  </div>
+  <div class="footer-copy">© 2026 Sage. All rights reserved.</div>
+  <div class="footer-status">
+    <span class="pulse"></span>
+    In active development
+  </div>
+</footer>
+
+<script>
+// ─── CURSOR ───
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+
+(function animRing() {
+  rx += (mx - rx) * 0.13;
+  ry += (my - ry) * 0.13;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+})();
+
+document.querySelectorAll('a, button, .feat-card, .step-card, .stat, .result-row, .side-item, .chip').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.width = '14px';
+    cursor.style.height = '14px';
+    ring.style.width = '48px';
+    ring.style.height = '48px';
+    ring.style.borderColor = 'var(--blue)';
+    ring.style.opacity = '0.7';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.width = '10px';
+    cursor.style.height = '10px';
+    ring.style.width = '36px';
+    ring.style.height = '36px';
+    ring.style.borderColor = 'var(--blue-light)';
+    ring.style.opacity = '0.5';
+  });
+});
+
+// ─── RIPPLE ───
+function createRipple(e, el) {
+  const rect = el.getBoundingClientRect();
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  const size = Math.max(rect.width, rect.height) * 1.5;
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+  el.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
+}
+
+// ─── SCROLL REVEAL ───
+const revealEls = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => entry.target.classList.add('visible'), i * 60);
+    }
+  });
+}, { threshold: 0.1 });
+revealEls.forEach(el => obs.observe(el));
+
+// ─── STEP CARDS STAGGER ───
+const steps = document.querySelectorAll('.step-card');
+const stepObs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = [...steps].indexOf(entry.target);
+      setTimeout(() => entry.target.classList.add('visible'), idx * 100);
+    }
+  });
+}, { threshold: 0.15 });
+steps.forEach(el => stepObs.observe(el));
+
+// ─── DASHBOARD 3D TILT ───
+const dash = document.getElementById('dashCard');
+dash.addEventListener('mousemove', e => {
+  const r = dash.getBoundingClientRect();
+  const cx = r.left + r.width / 2;
+  const cy = r.top + r.height / 2;
+  const dx = (e.clientX - cx) / r.width;
+  const dy = (e.clientY - cy) / r.height;
+  dash.style.transform = `perspective(1000px) rotateY(${dx * 5}deg) rotateX(${-dy * 4}deg) scale(1.01)`;
+  dash.style.boxShadow = `${-dx * 20}px ${dy * 20}px 60px rgba(37,99,235,0.15)`;
+});
+dash.addEventListener('mouseleave', () => {
+  dash.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+  dash.style.boxShadow = '';
+});
+
+// ─── FEAT CARDS 3D TILT ───
+document.querySelectorAll('.feat-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dx = (e.clientX - cx) / r.width;
+    const dy = (e.clientY - cy) / r.height;
+    card.style.transform = `perspective(600px) rotateY(${dx * 8}deg) rotateX(${-dy * 6}deg) translateY(-6px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+
+// ─── SIDEBAR INTERACTIONS ───
+document.querySelectorAll('.side-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.side-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
