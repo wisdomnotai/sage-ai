@@ -1,6 +1,12 @@
-#search tool schema
+#creating search paper function
 
-search_tool = {
+def search_paper(query):
+
+    pass 
+
+#defining the search paper schema
+
+search_papers_schema = {
     "type":"function",
     "function":{
         "name":"search_papers",

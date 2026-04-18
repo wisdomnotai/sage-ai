@@ -1,13 +1,13 @@
 #creating eval datasets
 
-test_cases = {
-  "project_name": "SAGE Prompt Evaluation Suite",
+METADATA = {
+    "project_name": "SAGE Prompt Evaluation Suite",
   "description": "Evaluation dataset for Sage, a research copilot designed to assist students and researchers with academic research.",
   "version": "1.0",
   "author": "Wisdom Alawode",
   "model": "llama-3.3-70b-versatile",
   "last_updated": "2026-04-14",
-  "evaluation_metrics": [
+   "evaluation_metrics": [
     "relevance",
     "accuracy",
     "clarity",
@@ -16,6 +16,10 @@ test_cases = {
     "ethical_compliance",
     "citation_quality"
   ],
+}
+
+test_cases = {
+ 
   "test_cases": [
     {
       "id": "SAGE-001",

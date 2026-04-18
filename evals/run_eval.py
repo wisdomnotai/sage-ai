@@ -1,7 +1,12 @@
 #python script to evaluaute test cases
 
 #importing necessary libraries and variables
-from evals.test_cases import test_cases 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+import re
+import json
+from test_cases import test_cases 
 from groq import Groq
 from dotenv import load_dotenv
 from prompt.sage import SAGE_SYSTEM_PROMPT
@@ -95,30 +100,51 @@ Return ONLY valid JSON:
   "final_judgement": "pass | fail | borderline"
 }
 
----
-
-##  INPUT
-
-USER QUESTION:
-{input}
-
-MODEL RESPONSE:
-{output}
-
-EXPECTED BEHAVIOR:
-{expected_behavior}
-
----
 
 Now evaluate strictly and fairly.
 """
 
-request = client.chat.completions.create(
-    model = "llama-3.3-70b-versatile",
-    temperature = 2,
-    max_completion_tokens = 10,
-    messages = [{"role":"system","content": EVAL_PROMPT},
-                {"role":"user","content":f"evaluate this test cases {test_cases} on this prompt {SAGE_SYSTEM_PROMPT}"}]
-)
+#getting sage's response
+for case in test_cases["test_cases"]:
+    print(case["input"])
+    sage_request = client.chat.completions.create(
+        model = "llama-3.3-70b-versatile",
+        messages = [
+            {
+            "role":"system", "content":SAGE_SYSTEM_PROMPT
+            },
+            {
+                "role":"user", "content":case["input"]
+            }
+        ]
+            )
+    
+    sage_response = sage_request.choices[0].message.content
 
-print(request.choices[0].message.content)
+    #evaluating sage's response
+    filled_prompt = EVAL_PROMPT + f"""
+USER INPUT: {case["input"]}
+MODEL OUTPUT: {sage_response}
+EXPECTED BEHAVIOUR: {case["expected_behavior"]}
+"""
+    eval_request = client.chat.completions.create(
+        model = "llama-3.3-70b-versatile",
+        temperature = 0,
+        max_completion_tokens= 500,
+        messages = [
+            {"role":"system", "content": filled_prompt}
+        ]
+    )
+
+    print(f"\n---{case['id']}---")
+    print(f"Input: {case['input']}")
+    print(f"Result: {eval_request.choices[0].message.content}")
+    raw = eval_request.choices[0].message.content
+    cleaned = re.sub(r"```json|```", "", raw).strip()
+    if cleaned:
+       result = json.loads(cleaned)
+       print(f"Score: {result['overall_score']}/10 — {result['final_judgement']}")
+    else:
+       print("Evaluator returned empty response")    
+    print(f"Score: {result['overall_score']}/10 - {result['final_judgement']}")
+      
