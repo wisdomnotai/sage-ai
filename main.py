@@ -30,7 +30,8 @@ def chat(user_input):
         model="llama-3.3-70b-versatile",
         temperature=0,
         max_completion_tokens=400,
-        messages=messages
+        messages=messages,
+        tools = [search_papers_schema]
     )
 
     # Extract assistant response
