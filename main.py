@@ -11,7 +11,7 @@ from tools.search_tool import search_papers, search_papers_schema
 load_dotenv()
 
 # Initiating the Groq client
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+client = Groq()
 
 # Declaring list for conversation memory with system prompt
 messages = [
