@@ -1,6 +1,6 @@
 #creating search paper function
 
-def search_paper(query):
+def search_papers(query):
     return f"found papers for : {query}"
 
 #defining the search paper schema

@@ -3,7 +3,9 @@
 # Importing dependencies
 from groq import Groq
 from dotenv import load_dotenv
-from prompt.sage import SAGE_SYSTEM_PROMPT
+from prompt.sage import  SAGE_SYSTEM_PROMPT
+from tools.search_tool import search_papers, search_papers_schema 
+
 
 # Loading environment variables
 load_dotenv()
