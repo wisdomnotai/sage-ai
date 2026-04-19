@@ -1,6 +1,7 @@
 # sage app by Wisdom Alawode
 
 # Importing dependencies
+import json
 from groq import Groq
 from dotenv import load_dotenv
 from prompt.sage import  SAGE_SYSTEM_PROMPT
