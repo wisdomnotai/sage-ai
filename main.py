@@ -35,12 +35,42 @@ def chat(user_input):
         tools = [search_papers_schema]
     )
 
-    # Extract assistant response
-    answer = request.choices[0].message.content
+    #saving the response object
+    response_message = request.choices[0].message
 
-    # Store assistant response
-    messages.append({"role": "assistant", "content": answer})
 
+    #checking for tool call
+    if response_message.tool_calls:
+        tool_call = response_message.tool_calls[0]
+        tool_name = tool_call.function.name
+        tool_args = json.loads(tool_call.function.arguments)
+        
+        if tool_name == "search_papers":
+            tool_result = search_papers(tool_args["query"])
+        
+    #adding tool call and result of the call to the conversation history
+        
+        messages.append(response_message)
+        messages.append({
+            "role":"tool",
+            "tool_call_id": tool_call.id,
+            "content":tool_result
+        })
+
+        second_request = client.chat.completions.create(
+            model = "llama-3.3-70b-versatile",
+            temperature = 0,
+            max_completion_tokens= 400,
+            messages = messages,
+            tools = [search_papers_schema]
+        )
+
+
+        answer = second_request.choices[0].message.content or "I searched for papers but couldn't geenrate a response, Try again"
+
+    else:
+        answer = response_message.content
+    messages.append({"role":"assistant","content":answer})
     return answer
 
 
