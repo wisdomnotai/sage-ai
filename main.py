@@ -62,16 +62,16 @@ def chat(user_input):
             temperature = 0,
             max_completion_tokens= 400,
             messages = messages,
-            tools = [search_papers_schema]
         )
 
-
+        print("SECOND RESPONSE:", second_request.choices[0].message)
         answer = second_request.choices[0].message.content or "I searched for papers but couldn't geenrate a response, Try again"
 
     else:
         answer = response_message.content
     messages.append({"role":"assistant","content":answer})
     return answer
+    
 
 
 def main():
